@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kinwing reader</title>
+<link rel="stylesheet" href="/static/app.css">
+<script defer src="/static/app.js"></script>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="#/">kinwing</a>
+  <nav>
+    <a href="#/" data-nav="home">Home</a>
+    <a href="#/highlights" data-nav="highlights">Highlights</a>
+    <a href="#/questions" data-nav="questions">My questions</a>
+  </nav>
+  <form class="search" id="search" role="search">
+    <input type="search" name="q" placeholder="Search concepts, claims, sources" aria-label="Search">
+  </form>
+</header>
+<div id="session-bar" class="session-bar" hidden></div>
+<main id="view" class="view" aria-live="polite"><p class="muted">Loading…</p></main>
+<div id="seltool" class="seltool" hidden role="toolbar" aria-label="Selection">
+  <button data-act="hl" title="Highlight the selection">Highlight</button>
+  <button data-act="note" title="Highlight and add your note">+ Note</button>
+  <button data-act="ask" title="Ask a question about this passage">Ask</button>
+  <button data-act="challenge" title="Flag that you're not convinced">Not convinced</button>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><p class="view">The kinwing reader needs JavaScript. Everything it shows is also in the knowledge base as Markdown.</p></noscript>
+</body>
+</html>

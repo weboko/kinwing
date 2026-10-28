@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+# local knowledge homes used while developing / demoing
+/.kw-home/
+/knowledge/
+/demo/out/

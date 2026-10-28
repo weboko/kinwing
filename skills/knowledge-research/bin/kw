@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# kw — kinwing CLI. Runs the package that ships next to this script (skill-relative), so
+# the skill works wherever it is linked: ai-box's context/skills, a checkout, or the image.
+set -euo pipefail
+here="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+command -v python3 >/dev/null 2>&1 || {
+  echo "kw: python3 is required (the ai-box codex image lacks it; see integrations/ai-box/README.md)" >&2
+  exit 127
+}
+PYTHONPATH="$here/../lib${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m kinwing "$@"
