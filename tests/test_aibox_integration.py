@@ -52,6 +52,10 @@ def have_docker():
 class AiBoxIntegrationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        names = subprocess.run(["docker", "ps", "-a", "--format", "{{.Names}}"], capture_output=True, text=True).stdout.split()
+        if {"kinwing-reader", "ai-box"} & set(names):
+            raise unittest.SkipTest("a container named kinwing-reader or ai-box exists (compose uses fixed names); "
+                                    "stop it to run this test")
         cls.tmp = Path(tempfile.mkdtemp(prefix="kw-aibox-"))
         cls.aibox = cls.tmp / "ai-box"
         shutil.copytree(AIBOX, cls.aibox, ignore=shutil.ignore_patterns(".git"))
