@@ -19,9 +19,13 @@ import datetime as _dt
 import json
 import re
 
+import os
+
 try:  # pragma: no cover - exercised only where PyYAML is installed
     import yaml as _pyyaml
 except Exception:  # noqa: BLE001
+    _pyyaml = None
+if os.environ.get("KW_YAML") == "builtin":  # force the built-in parser (tests, parity checks)
     _pyyaml = None
 
 

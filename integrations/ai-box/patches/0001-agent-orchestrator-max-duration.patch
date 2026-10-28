@@ -1,0 +1,104 @@
+diff --git a/context/skills/agent-orchestrator/SKILL.md b/context/skills/agent-orchestrator/SKILL.md
+index a7dc904..9dd88fe 100644
+--- a/context/skills/agent-orchestrator/SKILL.md
++++ b/context/skills/agent-orchestrator/SKILL.md
+@@ -66,7 +66,8 @@ Fill `templates/task.md`:
+ - `slug` — lowercase-hyphen, ≤3 words (`fix-auth`, `review-issues`). Scheduled slugs must be unique.
+ - `agent` — the user's choice, else omit (config `default_agent`, else `claude`).
+ - `repo` — `owner/repo`, a GitHub URL, or (with `create_repo: true`) a bare name for a new repo; one repo per task. Omit for local-only tasks.
+-- `mode`, `create_repo`, `visibility`, `workdir` — see the table above; omit to get the defaults. Name new knowledge repos after the topic (`ai-news-digest`), not the run.
++- `mode`, `create_repo`, `visibility`, `workdir` — see the table above; omit to get the defaults.
++- `max_duration` — optional hard limit on the run's wall-clock time (`45m`, `2h`); the agent is stopped when it is reached. Use it for recurring tasks. Name new knowledge repos after the topic (`ai-news-digest`), not the run.
+ - Body: Goal, Background, Requirements, Done Criteria, User Notes. Keep it task-specific — workdir, branch, commit/push/PR and report rules come from `templates/contract.md` plus `templates/delivery-<mode>.md`, appended automatically. To deviate (e.g. "analysis only, no PR"), say so in Requirements; the contract defers to the task.
+ - Recurring tasks: write the goal so each run stands alone ("triage issues opened since the last run"). For knowledge tasks, say how the content should be organized (one file per topic, a dated changelog…) — the agent already knows to read what's there, update in place and keep `README.md` as the index.
+ 
+diff --git a/context/skills/agent-orchestrator/bin/run-agent.sh b/context/skills/agent-orchestrator/bin/run-agent.sh
+index d2b57de..5272281 100755
+--- a/context/skills/agent-orchestrator/bin/run-agent.sh
++++ b/context/skills/agent-orchestrator/bin/run-agent.sh
+@@ -2,7 +2,7 @@
+ # run-agent.sh — start an agent in the background on a prepared run folder.
+ #
+ # Usage:
+-#   run-agent.sh --agent claude|codex --run-dir RUN_DIR --workdir DIR
++#   run-agent.sh --agent claude|codex --run-dir RUN_DIR --workdir DIR [--max-duration 45m]
+ #
+ # Expects RUN_DIR/agent-task.md. Runs the agent inside DIR (the run's worktree or a
+ # persistent workspace), detached, with the task on stdin and output in RUN_DIR/agent.log.
+@@ -10,16 +10,19 @@
+ # agent exits, and finalizes the run (finalize-run.sh) right after.
+ #
+ # Agents always run in unrestricted mode; there is no safe-mode switch.
++# --max-duration (a `timeout` duration: 90s, 45m, 2h) stops the agent when it runs longer;
++# its exit code is then 124 and the run is finalized as failed.
+ 
+ . "$(dirname "$(readlink -f "$0")")/_lib.sh"
+ 
+-AGENT="" RUN_DIR="" WORKDIR=""
++AGENT="" RUN_DIR="" WORKDIR="" MAX_DURATION=""
+ while [[ $# -gt 0 ]]; do
+   case "$1" in
+     -a|--agent)   AGENT="$2"; shift 2 ;;
+        --run-dir) RUN_DIR="$2"; shift 2 ;;
+        --workdir) WORKDIR="$2"; shift 2 ;;
+-    -h|--help)    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
++       --max-duration) MAX_DURATION="$2"; shift 2 ;;
++    -h|--help)    sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+     *) die "unknown flag: $1" 2 ;;
+   esac
+ done
+@@ -33,6 +36,13 @@ case "$AGENT" in
+   codex)  CMD=(codex exec --dangerously-bypass-approvals-and-sandbox --json -) ;;
+ esac
+ 
++if [[ -n "$MAX_DURATION" ]]; then
++  [[ "$MAX_DURATION" =~ ^[0-9]+(\.[0-9]+)?[smhd]?$ ]] || die "invalid --max-duration: $MAX_DURATION (e.g. 90s, 45m, 2h)" 2
++  need timeout
++  # SIGTERM at the limit, SIGKILL a minute later if the agent ignores it.
++  CMD=(timeout --kill-after=60 "$MAX_DURATION" "${CMD[@]}")
++fi
++
+ # setsid gives the agent its own process group, so it outlives the caller (cron,
+ # the orchestrating session) and `status.sh --kill` can stop all of it at once.
+ DETACH=(nohup)
+diff --git a/context/skills/agent-orchestrator/bin/run-task.sh b/context/skills/agent-orchestrator/bin/run-task.sh
+index 3a7387d..b5cec42 100755
+--- a/context/skills/agent-orchestrator/bin/run-task.sh
++++ b/context/skills/agent-orchestrator/bin/run-task.sh
+@@ -39,6 +39,7 @@ need_agent "$AGENT"
+ 
+ [[ -n "$REPO" ]] || REPO="$(fm_get repo "$TASK")"
+ MODE="$(spec_mode "$TASK" "$REPO")"
++MAX_DURATION="$(fm_get max_duration "$TASK")"
+ SLUG="$(spec_slug "$TASK")"
+ 
+ if [[ "$MODE" != local ]]; then
+@@ -89,12 +90,14 @@ jq -n \
+   --arg run_id "$RUN_ID" --arg task_slug "$SLUG" --arg agent "$AGENT" --arg mode "$MODE" \
+   --arg task_file "$TASK" --arg repo "$REPO" --arg base_repo_path "$BASE" \
+   --arg workdir "$WORKDIR" --arg branch "$BRANCH" --arg created_at "$(isoNow)" \
++  --arg max_duration "$MAX_DURATION" \
+   '{run_id:$run_id, task_slug:$task_slug, agent:$agent, mode:$mode, task_file:$task_file,
+     repo:$repo, base_repo_path:$base_repo_path, workdir:$workdir,
+-    branch:$branch, status:"running", created_at:$created_at}' \
++    branch:$branch, status:"running", created_at:$created_at, max_duration:$max_duration}' \
+   > "$RUN_DIR/run.json"
+ 
+-if ! PID="$("$AO_BIN/run-agent.sh" --agent "$AGENT" --run-dir "$RUN_DIR" --workdir "$WORKDIR")"; then
++if ! PID="$("$AO_BIN/run-agent.sh" --agent "$AGENT" --run-dir "$RUN_DIR" --workdir "$WORKDIR" \
++     ${MAX_DURATION:+--max-duration "$MAX_DURATION"})"; then
+   run_json_set "$RUN_ID" '.status = "failed"'
+   die "agent failed to start; run folder kept at $RUN_DIR"
+ fi
+diff --git a/context/skills/agent-orchestrator/templates/task.md b/context/skills/agent-orchestrator/templates/task.md
+index 7be4e3d..7925cb0 100644
+--- a/context/skills/agent-orchestrator/templates/task.md
++++ b/context/skills/agent-orchestrator/templates/task.md
+@@ -8,6 +8,7 @@ repo: "{{REPO}}"
+ # create_repo: true         # pr/push: create the repo on GitHub if it doesn't exist
+ # visibility: "private"     # with create_repo: private | public
+ # workdir: "~/notes/x"      # push/local: persistent folder (default $AO_HOME/workspaces/<slug>)
++# max_duration: "45m"       # stop the agent after this long (timeout syntax: 90s, 45m, 2h)
+ # Scheduled tasks only — set exactly one, in machine-local time:
+ # cron: "0 9 * * 1"
+ # run_at: "2030-01-02 08:30"

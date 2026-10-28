@@ -95,7 +95,7 @@ class KB:
                    detail: str | None = None) -> None:
         if not topic or not self.exists("topic", topic):
             return
-        entry = {"at": now(), "kind": kind, "id": eid, "summary": summary}
+        entry = {"at": store.now_ms(), "kind": kind, "id": eid, "summary": summary}
         if run:
             entry["run"] = run
         if detail:
@@ -736,7 +736,7 @@ class KB:
 
 
 def _norm_text(s: str) -> str:
-    return re.sub(r"\s+", " ", str(s or "").lower()).strip(" .")
+    return re.sub(r"\s+", " ", str(s or "").lower()).strip(" .?!;:")
 
 
 def _add_revision(body: str, text: str, run: str | None) -> str:

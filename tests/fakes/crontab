@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Fake crontab for tests: keeps the table in $FAKE_CRONTAB instead of the system's.
+f="${FAKE_CRONTAB:?FAKE_CRONTAB not set}"
+case "${1:-}" in
+  -l) [ -f "$f" ] && cat "$f" || { echo "no crontab for $(whoami)" >&2; exit 1; } ;;
+  -) cat > "$f" ;;
+  *) echo "fake crontab: unsupported $*" >&2; exit 2 ;;
+esac

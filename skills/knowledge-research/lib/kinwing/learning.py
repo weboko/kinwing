@@ -178,7 +178,7 @@ class Learning:
         def fn(st):
             t = st["topics"].setdefault(topic, {})
             t["previous_visit"] = t.get("last_visit")
-            t["last_visit"] = now()
+            t["last_visit"] = store.now_ms()
             return t
         return self._mutate(fn)
 

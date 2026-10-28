@@ -484,7 +484,8 @@ def add_source(kb: KB, topic: str, url: str | None = None, file: str | None = No
         ctype = sniff_type(raw, "", fp.name if content_file != "-" else "stdin.txt")
         note = "content supplied by the agent (--content-file), not fetched by kinwing"
     elif url and not metadata_only:
-        fetched = fetch(fetch_url_for(canon))
+        # Fetch what was given (canonical form only decides identity: http and https count as one).
+        fetched = fetch(fetch_url_for(url.strip()))
         raw, ctype, charset = fetched["data"], fetched["content_type"], fetched["charset"]
         final_url = fetched["final_url"]
         ctype = sniff_type(raw, ctype, final_url or canon)
@@ -526,7 +527,7 @@ def add_source(kb: KB, topic: str, url: str | None = None, file: str | None = No
         if text.strip():
             store.atomic_write(lib / "content.txt", text)
         if fetched:
-            store.write_json(lib / "fetch.json", {"url": canon, "fetched_from": fetch_url_for(canon),
+            store.write_json(lib / "fetch.json", {"url": canon, "fetched_from": fetch_url_for(url.strip()),
                                                   "final_url": final_url, "status": fetched.get("status"),
                                                   "headers": fetched.get("headers"), "at": now()})
         meta = {
@@ -579,7 +580,7 @@ def refetch(kb: KB, sid: str) -> dict:
     meta, body = kb.load("source", sid)
     if not meta.get("canonical_url"):
         raise KwError(f"{sid} has no URL to re-fetch")
-    fetched = fetch(fetch_url_for(meta["canonical_url"]))
+    fetched = fetch(fetch_url_for(meta.get("url") or meta["canonical_url"]))
     ctype = sniff_type(fetched["data"], fetched["content_type"], fetched["final_url"])
     text, _ = extract(fetched["data"], ctype, fetched["charset"])
     new_hash = content_hash(text)

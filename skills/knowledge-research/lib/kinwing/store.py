@@ -46,6 +46,11 @@ def now() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def now_ms() -> str:
+    """Millisecond timestamps for ordering events (change log, visits) within a second."""
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
 def today() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
 

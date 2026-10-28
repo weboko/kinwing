@@ -160,6 +160,9 @@ def begin(kb: KB, topic: str, agent: str = "", ao_run_dir: str = "", questions: 
         for r in active_runs(kb, topic):
             started = parse_ts(r.get("started"))
             stale = started is None or _utcnow() - started > dt.timedelta(minutes=2 * int(budget["max_minutes"]) + 10)
+            # The orchestrator recorded the agent's exit (finished, crashed, or stopped by max_duration).
+            if r.get("ao_run_dir") and (Path(r["ao_run_dir"]) / "exit_code").exists():
+                stale = True
             if stale or force:
                 recover(kb, r["id"], "interrupted" if stale else "superseded by a forced run")
                 recovered.append(r["id"])

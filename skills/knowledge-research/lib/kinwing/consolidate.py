@@ -36,7 +36,9 @@ def similarity(a: str, b: str) -> float:
 
 def analyze(kb: KB, topic: str, dup_threshold: float = 0.6) -> dict:
     t = kb.topic(topic)
-    claims = [c for c in kb.metas("claim", topic) if c.get("state") == "current"]
+    # Better-supported, older claims first, so a suggested merge keeps the stronger one.
+    claims = sorted([c for c in kb.metas("claim", topic) if c.get("state") == "current"],
+                    key=lambda c: (-len(c.get("support") or []), c.get("created") or "", c["id"]))
     all_claims = {c["id"]: c for c in kb.metas("claim")}
     evidence = [e for e in kb.metas("evidence", topic)]
     cited = {e for c in kb.metas("claim") for e in (c.get("support") or []) + (c.get("counter") or [])}

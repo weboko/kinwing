@@ -469,6 +469,54 @@ def cmd_commit(args):
     print("committed: " + args.message)
 
 
+def cmd_changes(args):
+    """What changed since a date or duration (7d, 24h), per topic."""
+    import datetime as dt
+    import re as _re
+
+    kb = _kb(args)
+    since = args.since
+    m = _re.fullmatch(r"(\d+)([dhw])", since or "")
+    if m:
+        n, unit = int(m.group(1)), m.group(2)
+        delta = {"d": dt.timedelta(days=n), "h": dt.timedelta(hours=n), "w": dt.timedelta(weeks=n)}[unit]
+        since = (dt.datetime.now(dt.timezone.utc) - delta).strftime("%Y-%m-%dT%H:%M:%SZ")
+    topics = [args.topic] if args.topic else [t["id"] for t in kb.topics()]
+    out, rows = [], {}
+    for tid in topics:
+        ch = [c for c in kb.changes(tid) if c.get("at", "") >= (since or "")]
+        rows[tid] = ch
+        if not ch:
+            continue
+        out.append(f"## {kb.topic(tid)['title']} ({len(ch)} changes since {since[:16]})")
+        kinds = {}
+        for c in ch:
+            kinds.setdefault(c["kind"], []).append(c)
+        for kind in ("claim", "concept", "source", "question", "run", "evidence", "overview", "topic"):
+            for c in kinds.get(kind, [])[-12:]:
+                out.append(f"- {c['at'][:16].replace('T', ' ')} {c['summary']}" + (f"\n    why: {c['detail'][:200]}" if c.get("detail") and kind != "run" else ""))
+    _out(args, rows, "\n".join(out) or f"no changes since {since}")
+
+
+def cmd_unknowns(args):
+    """What is still unknown: open questions, contested and weakly supported claims."""
+    kb = _kb(args)
+    t = kb.topic(args.topic)
+    qs = [(s, q) for s, w, q in kb.ranked_questions(args.topic, ("open", "in_progress", "partial", "blocked"))]
+    claims = [c for c in kb.metas("claim", args.topic) if c.get("state") == "current"]
+    contested = [c for c in claims if c.get("strength") == "contested"]
+    weak = [c for c in claims if c.get("strength") in ("weak", "unsupported") or c.get("kind") == "hypothesis"]
+    unc = [c for c in claims if c.get("uncertainty") and c not in weak and c not in contested]
+    if args.json:
+        return _out(args, {"questions": [q for _, q in qs], "contested": contested, "weak": weak, "uncertain": unc})
+    lines = [f"# Still unknown — {t['title']}", "", f"## Open questions ({len(qs)})"]
+    lines += [f"- {q['text']}  ({q['status']}, {q.get('origin')}{', ' + q['perspective'] if q.get('perspective') else ''})" for _, q in qs] or ["- none"]
+    lines += ["", f"## Contested ({len(contested)})"] + [f"- {c['text']}" for c in contested]
+    lines += ["", f"## Weakly supported or hypothetical ({len(weak)})"] + [f"- {c['text']} [{c.get('strength')} {c.get('kind')}]" for c in weak]
+    lines += ["", f"## Stated uncertainties ({len(unc)})"] + [f"- {c['text']}: {c['uncertainty']}" for c in unc]
+    print("\n".join(lines))
+
+
 # --------------------------------------------------------------------------- runs
 
 
@@ -595,6 +643,12 @@ def cmd_learn(args):
         s = L.create_session(minutes=args.minutes, topic=args.topic)
         return _out(args, s, f"session {s['id']} ({s['minutes']} min):\n" + "\n".join(
             f"  {i + 1}. {it['title']} — {it['depth']} (~{it['minutes']} min): {it['reason']}" for i, it in enumerate(s["items"])))
+    if args.learn_cmd == "answer":
+        a = L.add_answer(args.concept, args.prompt, _text_arg(args.text, args.text_file), kind=args.kind)
+        return _out(args, a, f"saved {a['id']} (the user's own words, unreviewed)")
+    if args.learn_cmd == "studied":
+        L.record_progress("concept", args.concept, fraction=1.0, depth=args.depth, completed=True, view=True)
+        return print(f"{args.concept}: recorded as studied ({args.depth}) in a chat session")
     if args.learn_cmd == "questions":
         rows = L.my_questions()
         return _out(args, rows, "\n".join(f"{q['id']}  {q['status']:<11} {q['text']}" + (f"\n    → {q['result']}" if q.get('result') else "")
@@ -909,6 +963,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--apply-safe", action="store_true", help="apply only reversible, non-destructive fixes")
     s.add_argument("--run")
     add("check", cmd_check, "validate records and references", sub)
+    s = add("changes", cmd_changes, "what changed since a date or duration (e.g. 7d)", sub)
+    s.add_argument("--since", default="7d", help="ISO date/time or 24h, 7d, 2w (default 7d)")
+    s.add_argument("--topic")
+    s = add("unknowns", cmd_unknowns, "open questions, contested and weak claims of a topic", sub)
+    s.add_argument("topic")
     s = add("commit", cmd_commit, "git commit the kb", sub)
     s.add_argument("-m", "--message", required=True)
 
@@ -973,6 +1032,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--minutes", type=int, default=15)
     s.add_argument("--topic")
     add("questions", cmd_learn, "questions the user raised while reading, and their research status", lp)
+    s = add("answer", cmd_learn, "store the user's own answer to a concept prompt (verbatim)", lp)
+    s.add_argument("concept")
+    s.add_argument("--prompt", required=True)
+    s.add_argument("--text")
+    s.add_argument("--text-file")
+    s.add_argument("--kind", default="explain", choices=["explain", "predict", "compare", "apply", "critique", "reflect"])
+    s = add("studied", cmd_learn, "record that the user worked through a concept with you in chat", lp)
+    s.add_argument("concept")
+    s.add_argument("--depth", default="read", choices=["glance", "read", "deep"])
 
     hp = sub.add_parser("highlight", help="highlights and annotations").add_subparsers(dest="hl_cmd", required=True)
     s = add("add", cmd_highlight, "highlight a passage (target: source:ID or concept:ID)", hp)
