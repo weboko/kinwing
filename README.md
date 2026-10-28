@@ -14,6 +14,9 @@ with Claude Code and Codex in [ai-box](https://github.com/weboko/ai-box) contain
 - **It stays yours.** Plain Markdown + YAML in a git repo, raw material next to it, an
   Obsidian export, reports through ai-box's create-report only when you ask.
 
+**Continuing this work? Read [HANDOFF.md](HANDOFF.md) first:** state, blockers, known gaps
+and the next tasks.
+
 Start here: [ARCHITECTURE.md](ARCHITECTURE.md) · [decisions](docs/decisions/) ·
 [demo](docs/DEMO.md) · [discovery](docs/DISCOVERY.md) · [open questions](docs/OPEN_QUESTIONS.md) ·
 [roadmap](docs/ROADMAP.md) · [implementation log](docs/IMPLEMENTATION_LOG.md) ·
