@@ -254,9 +254,11 @@ def render_brief(kb: KB, t: dict, run: dict, selected, recovered) -> str:
         if nxt:
             lines += ["It recommended:"] + [f"- {x}" for x in nxt]
         lines.append("")
-    else:
+    elif not t.get("perspectives") or not qs:
         lines += ["This is the first run on this topic: derive the perspectives and the initial question "
                   "queue first (`kw topic perspective add`, `kw q add`), then investigate.", ""]
+    else:
+        lines += ["This is the first run on this topic; the perspectives and questions were set at onboarding.", ""]
     persp = t.get("perspectives") or []
     if persp:
         lines += ["## Perspective coverage", ""]

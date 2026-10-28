@@ -42,8 +42,8 @@ def analyze(kb: KB, topic: str, dup_threshold: float = 0.6) -> dict:
     all_claims = {c["id"]: c for c in kb.metas("claim")}
     evidence = [e for e in kb.metas("evidence", topic)]
     cited = {e for c in kb.metas("claim") for e in (c.get("support") or []) + (c.get("counter") or [])}
-    res = {"duplicates": [], "conflicts": [], "unflagged_contradictions": [], "unsupported": [],
-           "stale": [], "orphan_evidence": [], "duplicate_evidence": [], "reopen_questions": []}
+    res = {"duplicates": [], "conflicts": [], "unflagged_contradictions": [], "counter_evidence": [],
+           "unsupported": [], "stale": [], "orphan_evidence": [], "duplicate_evidence": [], "reopen_questions": []}
     for i, a in enumerate(claims):
         for b in claims[i + 1:]:
             sim = similarity(a["text"], b["text"])
@@ -54,8 +54,14 @@ def analyze(kb: KB, topic: str, dup_threshold: float = 0.6) -> dict:
             elif sim >= 0.35 and neg_a != neg_b and not linked:
                 res["conflicts"].append({"a": a, "b": b, "similarity": round(sim, 2)})
     for c in claims:
-        if (c.get("contradicts") or c.get("counter")) and c.get("strength") != "contested":
+        if c.get("strength") == "contested":
+            pass
+        elif c.get("contradicts"):
+            # An explicit conflict between claims: marking both contested is safe to automate.
             res["unflagged_contradictions"].append(c)
+        elif c.get("counter"):
+            # Counter-evidence may be a caveat rather than a refutation: a judgement call.
+            res["counter_evidence"].append(c)
         if c.get("kind") == "finding" and not c.get("support"):
             res["unsupported"].append(c)
     cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=int(t.get("stale_after_days") or 180))
@@ -123,8 +129,12 @@ def render(kb: KB, topic: str, res: dict, applied: list[str]) -> str:
         f"  - {d['a']['text']}\n  - {d['b']['text']}\n"
         f"  - if they conflict: `kw claim update {d['b']['id']} --contradicts {d['a']['id']} --reason \"…\"` "
         "and add a question to resolve it (`--origin contradiction`)"))
-    sec("Contradicted claims not marked contested", res["unflagged_contradictions"],
+    sec("Claims in an explicit conflict but not marked contested", res["unflagged_contradictions"],
         lambda c: f"- `{c['id']}` {c['text']} (`kw consolidate {topic} --apply-safe` marks it)")
+    sec("Claims with counter-evidence (is the strength still right?)", res["counter_evidence"],
+        lambda c: f"- `{c['id']}` [{c.get('strength')}] {c['text']} — counter: {', '.join(c.get('counter') or [])}. "
+                  f"If it is a real refutation: `kw claim update {c['id']} --strength contested --reason \"…\"`; "
+                  "if it is a caveat, leave it")
     sec("Findings without supporting evidence", res["unsupported"],
         lambda c: f"- `{c['id']}` {c['text']} — add evidence or change its kind to hypothesis")
     sec("Stale claims (re-verify)", res["stale"],

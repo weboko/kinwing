@@ -1,0 +1,66 @@
+{
+  "id": "s-20261028-w9ggn",
+  "created": "2026-10-28T02:23:24Z",
+  "topic": "fsrs",
+  "minutes": 15,
+  "planned_minutes": 15,
+  "items": [
+    {
+      "concept": "dsr-model",
+      "title": "The DSR memory model",
+      "depth": "read",
+      "minutes": 3,
+      "reason": "new to you",
+      "done": false
+    },
+    {
+      "concept": "grading",
+      "title": "What your grades mean to FSRS",
+      "depth": "read",
+      "minutes": 1,
+      "reason": "new to you",
+      "done": false
+    },
+    {
+      "concept": "sm2",
+      "title": "SM-2, Anki's legacy scheduler",
+      "depth": "read",
+      "minutes": 1,
+      "reason": "new to you",
+      "done": false
+    },
+    {
+      "concept": "benchmark-metrics",
+      "title": "How schedulers are compared",
+      "depth": "read",
+      "minutes": 3,
+      "reason": "part of the topic",
+      "done": false
+    },
+    {
+      "concept": "desired-retention",
+      "title": "Desired retention",
+      "depth": "read",
+      "minutes": 2,
+      "reason": "new to you; builds on forgetting-curve (start there)",
+      "done": false
+    },
+    {
+      "concept": "difficulty",
+      "title": "Difficulty",
+      "depth": "read",
+      "minutes": 2,
+      "reason": "new to you; builds on dsr-model (start there)",
+      "done": false
+    },
+    {
+      "concept": "forgetting-curve",
+      "title": "The power-law forgetting curve",
+      "depth": "read",
+      "minutes": 3,
+      "reason": "new to you; builds on retrievability (start there)",
+      "done": false
+    }
+  ],
+  "note": "Not a lesson: skip, reorder or stop whenever you like."
+}

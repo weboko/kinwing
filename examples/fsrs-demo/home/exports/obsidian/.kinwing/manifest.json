@@ -1,0 +1,32 @@
+{
+  "notes": {
+    "source:src-awesome-fsrs-wiki-the-4c03": {
+      "path": "Sources/awesome-fsrs wiki The Algorithm.md",
+      "name": "awesome-fsrs wiki The Algorithm",
+      "sha256": "c17d65c6dd87cd3b462253c5ea7d04a4835a2af7e136614a06a6bd67041f42d7",
+      "exported": "2026-10-28T02:23:22Z",
+      "first_exported": "2026-10-28"
+    },
+    "source:src-awesome-fsrs-wiki-abc-of-103e": {
+      "path": "Sources/awesome-fsrs wiki ABC of FSRS.md",
+      "name": "awesome-fsrs wiki ABC of FSRS",
+      "sha256": "b68cf1a9a40665b44aac03dc9b876fbf899058c5343577829dc112d881a06153",
+      "exported": "2026-10-28T02:23:22Z",
+      "first_exported": "2026-10-28"
+    },
+    "concept:stability": {
+      "path": "Concepts/Memory stability.md",
+      "name": "Memory stability",
+      "sha256": "4042c63b99b106c36e714d7f08b6334c864c9630fb68c20e03b40283bdb01c91",
+      "exported": "2026-10-28T02:23:22Z",
+      "first_exported": "2026-10-28"
+    },
+    "topic:fsrs": {
+      "path": "Topics/Modern spaced-repetition scheduling (FSRS).md",
+      "name": "Modern spaced-repetition scheduling (FSRS)",
+      "sha256": "55410862af00d83596407133d5ae34cc900a84626b131e699a4410c4d1c44f4f",
+      "exported": "2026-10-28T02:23:22Z",
+      "first_exported": "2026-10-28"
+    }
+  }
+}

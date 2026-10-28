@@ -1,0 +1,17 @@
+{"at": "2026-10-28T02:23:03Z", "type": "view", "target": "concept:stability", "depth": "read"}
+{"at": "2026-10-28T02:23:04Z", "type": "highlight", "target": "concept:stability", "id": "h-20261028-gs8a3"}
+{"at": "2026-10-28T02:23:04Z", "type": "view", "target": "concept:stability", "depth": "read"}
+{"at": "2026-10-28T02:23:04Z", "type": "answer", "target": "concept:stability", "id": "a-20261028-y48eg"}
+{"at": "2026-10-28T02:23:04Z", "type": "view", "target": "concept:stability", "depth": "read"}
+{"at": "2026-10-28T02:23:05Z", "type": "self_report", "target": "concept:stability", "value": "familiar", "note": ""}
+{"at": "2026-10-28T02:23:05Z", "type": "view", "target": "concept:stability", "depth": "read"}
+{"at": "2026-10-28T02:23:11Z", "type": "view", "target": "concept:benchmark-metrics", "depth": "read"}
+{"at": "2026-10-28T02:23:11Z", "type": "ask", "target": "concept:benchmark-metrics", "kind": "challenge", "question": "q-20261028-f9zj", "text": "Log loss gaps look small (0.35 vs 0.39). Is that a meaningful difference for a learner?", "ref": "lq-20261028-gd68z"}
+{"at": "2026-10-28T02:23:12Z", "type": "view", "target": "concept:benchmark-metrics", "depth": "read"}
+{"at": "2026-10-28T02:23:12Z", "type": "view", "target": "source:src-awesome-fsrs-wiki-the-4c03", "depth": "read"}
+{"at": "2026-10-28T02:23:12Z", "type": "highlight", "target": "source:src-awesome-fsrs-wiki-the-4c03", "id": "h-20261028-gqvbg"}
+{"at": "2026-10-28T02:23:12Z", "type": "view", "target": "source:src-awesome-fsrs-wiki-the-4c03", "depth": "read"}
+{"at": "2026-10-28T02:23:19Z", "type": "view", "target": "source:src-awesome-fsrs-wiki-the-4c03", "depth": "read"}
+{"at": "2026-10-28T02:23:24Z", "type": "session", "target": "topic:fsrs", "id": "s-20261028-w9ggn", "minutes": 15}
+{"at": "2026-10-28T02:23:25Z", "type": "view", "target": "concept:stability", "depth": "read"}
+{"at": "2026-10-28T02:23:50Z", "type": "answer_review", "target": "concept:stability", "id": "a-20261028-y48eg", "assessment": "sound"}

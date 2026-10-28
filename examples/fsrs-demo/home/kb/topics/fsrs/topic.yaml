@@ -1,0 +1,62 @@
+# kinwing topic configuration. Edit freely; `kw check` validates it.
+id: fsrs
+title: Modern spaced-repetition scheduling (FSRS)
+description: ""
+objective: "Understand how FSRS models memory, how its parameters are fitted to a person's review history, and whether it really beats SM-2 — on evidence, not marketing."
+familiarity: "Has used Anki for years; knows the basic idea of spaced repetition and the forgetting curve."
+known_concepts:
+  - spaced repetition basics
+  - forgetting curve
+depth: orientation
+boundaries:
+  include: []
+  exclude:
+    - flashcard-making advice
+    - Anki UI how-tos
+preferred_sources:
+  - official docs
+  - benchmarks
+  - papers
+  - source code
+perspectives:
+  - id: memory-model
+    name: Memory model
+    why: what FSRS assumes about how memories decay and strengthen
+  - id: training
+    name: Parameter fitting
+    why: how the model is personalised from review logs
+  - id: evidence
+    name: Evidence and benchmarks
+    why: whether it predicts recall better than SM-2 and others
+  - id: practice
+    name: Scheduling in practice
+    why: desired retention, workload and how Anki uses the model
+  - id: lineage
+    name: Lineage and alternatives
+    why: SM-2, half-life regression, SSP-MMC, SuperMemo
+  - id: limits
+    name: Limits and criticism
+    why: where the model or its evaluation can mislead
+research_priorities:
+  - memory model
+  - parameter fitting
+  - evidence vs SM-2
+learning_priorities: []
+frequency: "0 9 * * 1,3,5"
+budget:
+  max_questions_per_run: 3
+  max_sources_per_run: 8
+  max_minutes: 40
+  max_runs_per_week: 6
+schedule:
+  enabled: true
+  cron: "0 9 * * 1,3,5"
+  agent: claude
+  ao_slug: kw-fsrs
+  max_duration: "30m"
+status: active
+stale_after_days: 180
+created: "2026-10-28T02:12:18Z"
+last_investigated: "2026-10-28T02:25:54Z"
+materials: []
+updated: "2026-10-28T02:25:55Z"

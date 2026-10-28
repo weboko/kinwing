@@ -1,0 +1,18 @@
+{
+  "title": "FSRS vs SM-2: what the evidence says",
+  "slug": "2026-10-28-fsrs-evidence",
+  "date": "2026-10-28",
+  "created": "2026-10-28T02:19:55Z",
+  "updated": "",
+  "tldr": "FSRS predicts recall far better than SM-2 on the developers' public benchmark, but the claim that it saves reviews still rests on simulation.",
+  "tags": [
+    "spaced repetition",
+    "FSRS",
+    "Anki",
+    "benchmarks"
+  ],
+  "model": "Claude",
+  "agent": "Claude Code",
+  "template": "longread",
+  "notes": ""
+}

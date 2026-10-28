@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "concepts": {
+    "stability": {
+      "observed": {
+        "first_seen": "2026-10-28T02:23:03Z",
+        "last_seen": "2026-10-28T02:23:25Z",
+        "views": 5,
+        "depth_max": "read",
+        "seconds": 6.5,
+        "progress": 1.0,
+        "position": 1.0,
+        "para": 2,
+        "answers": 1
+      },
+      "revisit": {
+        "step": 0,
+        "due": "2026-10-29",
+        "last": "2026-10-28T02:23:04Z"
+      },
+      "self_report": {
+        "value": "familiar",
+        "at": "2026-10-28T02:23:05Z"
+      }
+    },
+    "benchmark-metrics": {
+      "observed": {
+        "first_seen": "2026-10-28T02:23:11Z",
+        "last_seen": "2026-10-28T02:23:22Z",
+        "views": 2,
+        "depth_max": "read",
+        "seconds": 10.7,
+        "progress": 1.0,
+        "position": 1.0,
+        "para": 1
+      }
+    }
+  },
+  "sources": {
+    "src-awesome-fsrs-wiki-the-4c03": {
+      "observed": {
+        "first_seen": "2026-10-28T02:23:12Z",
+        "last_seen": "2026-10-28T02:23:20Z",
+        "views": 3,
+        "depth_max": "read",
+        "seconds": 6.8,
+        "progress": 0.52,
+        "position": 0.52,
+        "para": 86
+      }
+    }
+  },
+  "topics": {
+    "fsrs": {
+      "previous_visit": null,
+      "last_visit": "2026-10-28T02:23:02.196Z"
+    }
+  },
+  "last_position": {
+    "kind": "concept",
+    "id": "stability",
+    "at": "2026-10-28T02:23:25Z"
+  }
+}

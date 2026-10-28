@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FSRS vs SM-2: what the evidence says</title>
+<meta name="description" content="How the FSRS spaced-repetition scheduler models memory, how it is fitted, and what published benchmarks show against SM-2.">
+<script>document.documentElement.className += " js";</script>
+<link rel="stylesheet" href="assets/core/core.css">
+<link rel="stylesheet" href="assets/template/template.css">
+<!-- <link rel="stylesheet" href="assets/custom.css">   topic-specific styles, if any -->
+<script defer src="assets/core/core.js"></script>
+<script defer src="assets/core/charts.js"></script>
+<!-- <script defer src="assets/model.js"></script>   only if the report has a model -->
+<script defer src="assets/template/template.js"></script>
+<!-- <script defer src="assets/custom.js"></script>   topic-specific visuals, if any (after template.js) -->
+</head>
+<body id="top">
+<a class="skip" href="#article">Skip to article</a>
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="Contents"></nav>
+  <main id="article" class="article">
+    <header class="masthead">
+      <h1>FSRS vs SM-2: what the evidence says</h1>
+      <p class="dek">How the FSRS scheduler models memory, how it is fitted to a learner, and what the published benchmarks do and don't show against SM-2.</p>
+      <p class="byline">
+        <span>Research dossier · Spaced repetition · As&nbsp;of <time data-meta="date" datetime="2026-10-28">2026-10-28</time></span>
+        <span>The <a href="#tldr">short answer</a> takes 30 seconds · <span data-meta="reading-time"></span></span>
+      </p>
+      <details class="meta"><summary>About this report</summary><div class="meta-panel"></div></details>
+      <aside class="legend-head" aria-label="Evidence legend"><p class="legend-title">Reading the margin</p><div data-ev-legend></div></aside>
+    </header>
+
+    <section class="tldr sec" id="tldr" data-title="The short answer">
+      <h2>The short answer</h2>
+      <p class="lede">FSRS predicts recall far better than SM-2, but the claim that it saves reviews rests on simulation.</p>
+      <p>FSRS keeps a three-number memory state per card and fits its parameters to the learner's own history. <span class="ev" data-ev="fact">On the developers' public benchmark of about 10,000 Anki users, FSRS-6 reached a log loss of 0.346 against 0.616 for Anki's SM-2</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a>. That gap measures prediction, not workload: <span class="ev" data-ev="fact">the "20–30% fewer reviews" figure is labelled as simulation-based</span><a class="cite" href="#src-awesome-fsrs-wiki-abc-of-103e"></a>, and <span class="ev" data-ev="interpretation">all of the evidence comes from the people who build FSRS. It is public and reproducible, but not independent.</span></p>
+    </section>
+
+    <section class="sec" id="findings" data-title="Findings">
+      <h2>Findings</h2>
+      <p class="lede">The model is well documented. The prediction advantage is large. The practical benefit is not yet measured.</p>
+      <ol class="findings" data-collapse-with="d-findings">
+        <li><strong>Three variables per card replace SM-2's single ease factor.</strong></li>
+        <li><strong>Parameters are fitted to each learner by maximum likelihood.</strong></li>
+        <li><strong>FSRS-6 out-predicts every classic scheduler in the benchmark.</strong></li>
+        <li><strong>Anki's SM-2, as benchmarked, predicted recall worse than a constant guess.</strong></li>
+        <li><strong>Desired retention is the one setting to tune.</strong></li>
+      </ol>
+      <div class="deeper" id="d-findings" data-label="the evidence behind each finding">
+        <ol class="findings">
+          <li><strong>Three variables per card replace SM-2's single ease factor.</strong> <span class="ev" data-ev="fact">Retrievability is the probability of recall now, and stability is the number of days until it falls to 90%</span><a class="cite" href="#src-awesome-fsrs-wiki-abc-of-103e"></a>. <span class="ev" data-ev="fact">Difficulty is how hard it is to raise stability.</span><a class="cite" href="#src-awesome-fsrs-wiki-abc-of-103e"></a></li>
+          <li><strong>Parameters are fitted to each learner by maximum likelihood.</strong> <span class="ev" data-ev="fact">The optimiser uses maximum likelihood estimation and backpropagation through time over the review log</span><a class="cite" href="#src-awesome-fsrs-wiki-the-39f6"></a>. <span class="ev" data-ev="fact">Below a few hundred reviews there isn't enough data</span><a class="cite" href="#src-deck-options-0397"></a>, so <span class="ev" data-ev="fact">defaults fitted on about 10,000 users are used</span><a class="cite" href="#src-awesome-fsrs-wiki-abc-of-103e"></a>.</li>
+          <li><strong>FSRS-6 out-predicts every classic scheduler in the benchmark.</strong> <span class="ev" data-ev="fact">In the current tables it scores a log loss of 0.346, against 0.469 for half-life regression and 0.395 for a constant baseline</span><a class="cite" href="#src-srs-benchmark-8eec"></a>.</li>
+          <li><strong>Anki's SM-2, as benchmarked, predicted recall worse than a constant guess.</strong> <span class="ev" data-ev="fact">Its log loss was 0.616, against 0.395 for the constant baseline</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a>. <span class="ev" data-ev="fact">SM-2 does not predict recall natively, so the benchmark built its probabilities from assumed forgetting curves</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a>.</li>
+          <li><strong>Desired retention is the one setting to tune.</strong> <span class="ev" data-ev="fact">Higher retention means shorter intervals and more reviews, and the workload rises steeply toward 100%</span><a class="cite" href="#src-deck-options-0397"></a>.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec" id="model" data-title="The memory model">
+      <h2>How FSRS models a memory</h2>
+      <p class="lede">Each card has a memory state. Time lowers recall odds. Reviews raise stability, by less for hard cards and for memories that are already stable.</p>
+      <p>Retrievability falls along a power-law forgetting curve. <span class="ev" data-ev="fact">The curve drops sharply before the stability point and flatly after it</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a>, and <span class="ev" data-ev="fact">from FSRS-6 its decay is trainable</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a>. After a successful review, stability is multiplied by a factor. <span class="ev" data-ev="fact">That factor is smaller for difficult cards and for memories that are already stable.</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a> <span class="ev" data-ev="fact">It is larger when the review comes at lower recall odds. That is the spacing effect.</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a></p>
+      <div class="deeper" id="d-model" data-label="the formula and the version history">
+        <p>Since FSRS-4.5, R(t, S) = (1 + factor · t/S)<sup>−decay</sup>, with the factor chosen so that R = 90% when t = S. <span class="ev" data-ev="fact">The decay was 1 in FSRS v4 and 0.5 in FSRS-4.5</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a>. FSRS-6 learns it per user. <span class="ev" data-ev="fact">For overdue cards, the stability gained from a late review levels off at an upper limit</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a>, where SM-2's interval keeps growing with the delay.</p>
+        <p><span class="ev" data-ev="fact">FSRS grew out of MaiMemo's DHP model</span><a class="cite" href="#src-awesome-fsrs-wiki-the-4c03"></a> and <span class="ev" data-ev="fact">the SSP-MMC scheduling research, trained on 220 million review logs</span><a class="cite" href="#src-ssp-mmc-5d10"></a>. That research used Duolingo's half-life regression as a baseline<a class="cite" href="#src-half-life-regression-68b9"></a>.</p>
+      </div>
+    </section>
+
+    <section class="sec" id="evidence" data-title="Evidence vs SM-2">
+      <h2>Does it beat SM-2?</h2>
+      <p class="lede">On recall prediction, by a wide margin. On review workload, nothing has been measured outside simulation.</p>
+      <p>The current benchmark README has no SM-2 row. <span class="ev" data-ev="fact">The last revision that listed SM-2 dates from August 2025.</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a> It scored about 10,000 users by testing each algorithm on later reviews, after training on earlier ones.</p>
+      <figure class="chart" id="logloss">
+        <p class="fig-label">Log loss per user, August 2025 benchmark (lower is better)</p>
+        <script type="application/json">{ "type": "bar", "x": { "key": "label" }, "y": { "format": "number", "digits": 3 },
+          "series": [ { "key": "ll", "name": "Log loss" } ],
+          "data": [ { "label": "FSRS-6", "ll": 0.3456, "_highlight": true }, { "label": "FSRS-6, default parameters", "ll": 0.3661 },
+                    { "label": "Constant baseline (AVG)", "ll": 0.3945 }, { "label": "Half-life regression", "ll": 0.4694 },
+                    { "label": "Anki SM-2, trainable", "ll": 0.5129 }, { "label": "Anki SM-2", "ll": 0.616 } ] }</script>
+        <figcaption>Anki's SM-2, as the benchmark adapted it, predicts recall worse than always guessing the user's average.<a class="cite" href="#src-srs-benchmark-readme-at-f371"></a></figcaption>
+      </figure>
+      <div class="reconcile">
+        <div class="claim"><h4>Counting each user once</h4><p><span class="ev" data-ev="fact">Half-life regression beats trainable Anki-SM-2, at 0.469 against 0.513</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a>.</p></div>
+        <div class="claim"><h4>Weighting by reviews</h4><p><span class="ev" data-ev="fact">Trainable Anki-SM-2 edges out half-life regression, at 0.407 against 0.415</span><a class="cite" href="#src-srs-benchmark-readme-at-f371"></a>.</p></div>
+        <div class="verdict"><h4>Reconciliation</h4><p><span class="ev" data-ev="interpretation">Both tables are right. Weighting by reviews shows best-case performance for users with long histories. Which of these two weaker models ranks higher therefore depends on how much history a learner has. FSRS-6 leads in both tables.</span></p></div>
+      </div>
+      <div class="deeper" id="d-evidence" data-label="SuperMemo and independence">
+        <p><span class="ev" data-ev="fact">Against SuperMemo's SM-17, the only comparison is the FSRS author's own. It covers 19 users</span><a class="cite" href="#src-fsrs-vs-sm-17-3cec"></a>, and its error metric is a reimplementation whose exactness the author cannot guarantee<a class="cite" href="#src-fsrs-vs-sm-17-3cec"></a>. <span class="ev" data-ev="interpretation">Every performance number here comes from open-spaced-repetition. The data and scripts are public, but nobody independent has replicated the results in the sources read.</span></p>
+      </div>
+    </section>
+
+    <section class="sec" id="practice" data-title="Using it">
+      <h2>What this means in use</h2>
+      <p class="lede">Choose a desired retention, grade honestly, and give the optimiser a few hundred reviews.</p>
+      <p><span class="ev" data-ev="fact">Desired retention trades recall against workload, and workload climbs steeply toward 100%</span><a class="cite" href="#src-deck-options-0397"></a>. <span class="ev" data-ev="fact">FSRS treats Hard as a successful recall</span><a class="cite" href="#src-deck-options-0397"></a>, so pressing Hard after forgetting inflates the intervals it schedules.</p>
+    </section>
+
+    <section class="sec" id="risks" data-title="Risks &amp; unknowns">
+      <h2>Risks &amp; unknowns</h2>
+      <p class="lede">The gap between better prediction and fewer reviews is the main open question.</p>
+      <ul class="risks">
+        <li data-level="high"><strong>Workload savings are simulated.</strong> No measurement on real learners was found in the sources read, and the simulation's setup is not documented there.</li>
+        <li data-level="medium"><strong>SM-2's probabilities are constructed.</strong> The benchmark had to assume a forgetting curve for SM-2, which may handicap it.</li>
+        <li data-level="medium"><strong>No independent replication.</strong> Developers and evaluators are the same group.</li>
+      </ul>
+    </section>
+
+    <section class="sec" id="next" data-title="Next steps">
+      <h2>Next steps</h2>
+      <p class="lede">Measure what matters to a learner.</p>
+      <ol class="next">
+        <li><strong>Find real-learner outcomes.</strong> Settles whether better prediction means fewer reviews.</li>
+        <li><strong>Locate the "20–30% fewer reviews" simulation.</strong> Shows its assumptions.</li>
+        <li><strong>Translate log-loss gaps into workload terms.</strong> Makes the benchmark numbers interpretable.</li>
+      </ol>
+    </section>
+
+    <section class="sec" id="sources" data-title="Sources">
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li id="src-awesome-fsrs-wiki-abc-of-103e"><a href="https://github.com/open-spaced-repetition/awesome-fsrs/wiki/ABC-of-FSRS">open-spaced-repetition — ABC of FSRS (wiki)</a>, accessed 2026-10-28.</li>
+        <li id="src-awesome-fsrs-wiki-the-4c03"><a href="https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm">open-spaced-repetition — The Algorithm (wiki)</a>, accessed 2026-10-28.</li>
+        <li id="src-awesome-fsrs-wiki-the-39f6"><a href="https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-mechanism-of-optimization">open-spaced-repetition — The mechanism of optimization (wiki)</a>, accessed 2026-10-28.</li>
+        <li id="src-srs-benchmark-8eec"><a href="https://github.com/open-spaced-repetition/srs-benchmark">open-spaced-repetition — SRS Benchmark (current README)</a>, accessed 2026-10-28.</li>
+        <li id="src-srs-benchmark-readme-at-f371"><a href="https://github.com/open-spaced-repetition/srs-benchmark/blob/b9ee6cc3f21780f622ae1605f32703f155e5531a/README.md">open-spaced-repetition — SRS Benchmark README, revision b9ee6cc (August 2025)</a>, accessed 2026-10-28.</li>
+        <li id="src-fsrs-vs-sm-17-3cec"><a href="https://github.com/open-spaced-repetition/fsrs-vs-sm17">open-spaced-repetition — FSRS vs SM-17</a>, accessed 2026-10-28.</li>
+        <li id="src-deck-options-0397"><a href="https://github.com/ankitects/anki-manual/blob/main/src/deck-options.md">Anki manual — Deck Options (FSRS section)</a>, accessed 2026-10-28.</li>
+        <li id="src-ssp-mmc-5d10"><a href="https://github.com/maimemo/SSP-MMC">MaiMemo — SSP-MMC (code and data for Ye, Su &amp; Cao, KDD 2022)</a>, accessed 2026-10-28.</li>
+        <li id="src-half-life-regression-68b9"><a href="https://github.com/duolingo/halflife-regression">Duolingo — Half-Life Regression (code and data for Settles &amp; Meeder, ACL 2016)</a>, accessed 2026-10-28.</li>
+      </ol>
+    </section>
+    <footer class="colophon"><p>Set in Longread Serif, a subset of Charis SIL (SIL Open Font License). <a href="#top">↑ Back to top</a></p></footer>
+  </main>
+</div>
+</body>
+</html>

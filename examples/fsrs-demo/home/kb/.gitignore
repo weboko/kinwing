@@ -1,0 +1,3 @@
+# kinwing: raw material lives in ../library, outside git
+*.tmp
+.kw-*

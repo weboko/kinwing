@@ -52,6 +52,15 @@ class SynthesisTest(KwTestCase):
         self.assertEqual(len(res["conflicts"]), 1)                         # opposite polarity detected
         self.kb.update_claim(a["id"], reason="counter source", add_counter=[self.e1])
         res, _, applied = consolidate.run(self.kb, "t1", apply_safe=True)
+        # counter-evidence alone is reported, never auto-applied (it may be a caveat)
+        self.assertEqual(self.kb.load("claim", a["id"])[0]["strength"], "strong")
+        self.assertEqual([c["id"] for c in res["counter_evidence"]], [a["id"]])
+        self.assertFalse(applied)
+        # an explicit contradiction link (here written by hand in the file) is applied
+        m, body = self.kb.load("claim", a["id"])
+        m["contradicts"] = [b["id"]]
+        self.kb.save("claim", m, body)
+        res, _, applied = consolidate.run(self.kb, "t1", apply_safe=True)
         self.assertEqual(self.kb.load("claim", a["id"])[0]["strength"], "contested")
         self.assertTrue(applied)
         self.assertTrue(self.p.entity_path("claim", b["id"]).exists())     # nothing deleted

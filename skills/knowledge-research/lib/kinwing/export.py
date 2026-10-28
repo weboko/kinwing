@@ -223,10 +223,13 @@ def _source_note(ex: _Exporter, kb: KB, sid: str, hls: list[dict], concepts: lis
             lines.append("")
             if h.get("note"):
                 lines += [f"**My note:** {h['note']}", ""]
-    summary = parse_sections(body).get("Summary (AI-written)") or meta.get("assessment")
+    summary = parse_sections(body).get("Summary (AI-written)")
     if summary:
         lines += ["## AI summary", "", "> [!abstract]- Written by an AI research agent (kinwing), not by me",
                   _bq(summary), ""]
+    elif meta.get("assessment"):
+        lines += ["## Why this source", "", "> [!abstract]- The research agent's assessment (AI-written), not mine",
+                  _bq(meta["assessment"]), ""]
     rel = [ex.link(f"concept:{c}") for c in concepts if sid in _sources_of(kb, c)]
     rel = [r for r in rel if r]
     lines += ["## Links", "", "- Topics: " + (", ".join(ex.link(f"topic:{t}") or t for t in topics) or "—")]

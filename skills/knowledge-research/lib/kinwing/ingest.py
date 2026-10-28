@@ -260,10 +260,27 @@ def extract_html(data: bytes, charset: str = "") -> tuple[str, dict]:
 def extract_text(data: bytes, charset: str = "") -> tuple[str, dict]:
     text = data.decode(charset or "utf-8", "replace")
     meta = {}
-    m = re.search(r"^#\s+(.+)$", text, re.M)
+    # A title only if the document opens with a heading; a later "# Symbols" is a section.
+    first = next((l.strip() for l in text.splitlines() if l.strip() and not l.lstrip().startswith(("<!--", "<"))), "")
+    m = re.match(r"^#\s+(.+)$", first) or re.match(r"^title:\s*(.+)$", first)
     if m:
-        meta["title"] = m.group(1).strip()
+        meta["title"] = m.group(1).strip().strip('"')
     return tidy_text(text), meta
+
+
+def title_from_url(url: str) -> str:
+    """A readable fallback title: 'awesome-fsrs wiki: The Algorithm', 'owner/repo README'."""
+    u = urllib.parse.urlsplit(url)
+    parts = [urllib.parse.unquote(p) for p in u.path.split("/") if p]
+    host = (u.hostname or "").removeprefix("www.")
+    if host == "github.com" and len(parts) >= 2:
+        if len(parts) >= 4 and parts[2] == "wiki":
+            return f"{parts[1]} wiki: {parts[3].replace('-', ' ')}"
+        if len(parts) == 2:
+            return f"{parts[0]}/{parts[1]} README"
+        return f"{parts[1]}: {parts[-1]}"
+    stem = Path(parts[-1]).stem.replace("-", " ").replace("_", " ") if parts else host
+    return f"{host}: {stem}" if stem else host
 
 
 def extract_pdf(data: bytes, charset: str = "") -> tuple[str, dict]:
@@ -502,7 +519,10 @@ def add_source(kb: KB, topic: str, url: str | None = None, file: str | None = No
             if m.get("content_hash") == chash:
                 return link_existing(m, "known-content", alias=canon or None)
 
-    title = title or xmeta.get("title") or (Path(local_path).stem if local_path else "") or canon or "Untitled"
+    if not title and canon and "/wiki/" in canon and "github.com" in canon:
+        title = title_from_url(canon)  # wiki pages rarely open with their own name
+    title = title or xmeta.get("title") or (Path(local_path).stem if local_path else "") \
+        or (title_from_url(canon) if canon else "") or "Untitled"
     if not authors:
         authors = [a for a in [xmeta.get("author") or xmeta.get("citation_author")] if a]
     if rights is None:

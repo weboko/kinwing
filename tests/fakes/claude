@@ -26,8 +26,10 @@ if r.returncode in (10, 11, 12):
     lines.append(f"- refused, nothing to do: {r.stderr.strip()}")
 else:
     time.sleep(float(os.environ.get("FAKE_AGENT_SLEEP", "0")))
-    sh(f'{kw} q add "Follow-up found at {time.time_ns()}?" --topic {topic} --origin gap')
-    e = sh(f'{kw} run end --topic {topic} --summary "fake research run" --stop-reason questions-done --next "keep going"')
+    if os.environ.get("FAKE_AGENT_RECORD", "1") == "1":
+        sh(f'{kw} q add "Follow-up found at {time.time_ns()}?" --topic {topic} --origin gap')
+    e = sh(f'{kw} run end --topic {topic} --summary "stand-in agent run (no LLM): exercised the orchestration path only" '
+           f'--stop-reason stand-in-agent --next "keep going"')
     lines.append(f"- run end: {e.stdout.strip()} {e.stderr.strip()}")
     sh(f'git -C "{workdir}" add -A && git -C "{workdir}" commit -qm "{topic}: fake run"')
 open(os.path.join(run_dir, "report.md"), "w").write("\n".join(lines) + "\n")

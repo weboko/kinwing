@@ -82,8 +82,10 @@ def brief(kb: KB, topic: str, include_private_sources: bool = False) -> tuple[st
         return not sup or any(s in allowed for s in sup)
 
     gaps = []
-    paras = _overview_paragraphs(kb, topic)
+    paras = [_plain_links(" ".join(re.sub(r"(?m)^\s*[-*]\s+", "", p).split())) for p in _overview_paragraphs(kb, topic)]
     l0, rest = _first_sentence(paras[0]) if paras else ("GAP: write the one-sentence answer", "")
+    if not rest and len(paras) > 1:
+        rest = " ".join(paras[1:3])[:900]
     if not paras:
         gaps.append("the topic has no overview yet (topics/%s/overview.md)" % topic)
     out = [
@@ -97,7 +99,7 @@ def brief(kb: KB, topic: str, include_private_sources: bool = False) -> tuple[st
         "",
         "## TL;DR",
         f"L0: {l0}",
-        f"L1: {rest or (paras[1] if len(paras) > 1 else 'GAP: the 2–4 supporting points')}",
+        f"L1: {rest or 'GAP: the 2–4 supporting points'}",
         "",
         "## Findings",
     ]
@@ -109,12 +111,14 @@ def brief(kb: KB, topic: str, include_private_sources: bool = False) -> tuple[st
         out.append(f"{i}. **{c['text']}** Strength: {c.get('strength')} ({c.get('kind')}). {tags(c)}"
                    + (f" Uncertainty: {c['uncertainty']}" if c.get("uncertainty") else ""))
     out.append("")
-    concepts = kb.metas("concept", topic)
+    concepts = sorted(kb.metas("concept", topic), key=lambda c: c.get("title", ""))
     by_persp: dict[str, list] = {}
     for c in concepts:
         by_persp.setdefault(c.get("perspective") or "", []).append(c)
     pnames = {p["id"]: p["name"] for p in t.get("perspectives") or []}
-    for pid, cs in by_persp.items():
+    order = [p["id"] for p in t.get("perspectives") or []]
+    placed: set[str] = set()  # each claim once, under the first concept that cites it
+    for pid, cs in sorted(by_persp.items(), key=lambda kv: order.index(kv[0]) if kv[0] in order else 99):
         out.append(f"## {pnames.get(pid) or (pid.capitalize() if pid else 'Main concepts')}")
         for c in cs:
             secs = parse_sections(kb.load("concept", c["id"])[1])
@@ -124,8 +128,9 @@ def brief(kb: KB, topic: str, include_private_sources: bool = False) -> tuple[st
                 out.append("L1: " + _plain_links(" ".join(secs["Explanation"].split())))
             if secs.get("Details"):
                 out.append("L2: " + _plain_links(" ".join(secs["Details"].split())))
-            rel = [cl for cl in pub_claims if c["id"] in (cl.get("concepts") or [])]
+            rel = [cl for cl in pub_claims if c["id"] in (cl.get("concepts") or []) and cl["id"] not in placed]
             for cl in rel:
+                placed.add(cl["id"])
                 out.append(f"L3: {cl['text']} {tags(cl)}")
         out.append("")
     contested = [c for c in pub_claims if c.get("strength") == "contested" or c.get("contradicts")]
@@ -139,7 +144,8 @@ def brief(kb: KB, topic: str, include_private_sources: bool = False) -> tuple[st
                 continue
             seen.add(c["id"])
             n += 1
-            out.append(f"### {chr(64 + min(n, 26))}. {c['text'][:80]}")
+            head = c["text"] if len(c["text"]) <= 80 else c["text"][:80].rsplit(" ", 1)[0] + "…"
+            out.append(f"### {chr(64 + min(n, 26))}. {head}")
             side2 = [idx[o] for o in c.get("contradicts") or [] if o in idx]
             seen.update(o["id"] for o in side2)
             out.append(f"Side 1: {c['text']} {tags(c)}" + ("   Side 2: " + " / ".join(f"{o['text']} {tags(o)}" for o in side2)
