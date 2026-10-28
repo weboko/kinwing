@@ -5,3 +5,4 @@ __pycache__/
 /.kw-home/
 /knowledge/
 /demo/out/
+.cache/

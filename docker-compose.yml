@@ -1,0 +1,48 @@
+# Standalone kinwing services. With ai-box, use integrations/ai-box/ instead (same image,
+# same knowledge folder, mounted into the agent containers too).
+#
+#   docker compose up -d reader          # http://localhost:8765/
+#   docker compose run --rm kw status    # the CLI against the same knowledge folder
+#   docker compose run --rm test         # the test suite, inside the image
+
+x-kinwing: &kinwing
+  build:
+    context: .
+  image: kinwing:latest
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    # The knowledge home: kb/ (git), library/, learning/, runtime/, exports/.
+    - ${KW_HOST_DIR:-./knowledge}:/knowledge
+
+services:
+  reader:
+    <<: *kinwing
+    container_name: kinwing-reader
+    restart: unless-stopped
+    ports:
+      # Loopback only. On a VPS, reach it with: ssh -L 8765:127.0.0.1:8765 <host>
+      - "127.0.0.1:${KW_READER_PORT:-8765}:8765"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+
+  kw:
+    <<: *kinwing
+    profiles: [tools]
+    entrypoint: ["kw"]
+    command: ["status"]
+
+  test:
+    <<: *kinwing
+    profiles: [tools]
+    entrypoint: ["python3", "-m", "unittest", "discover", "-s", "tests", "-t", "."]
+    command: []
+    volumes:
+      - ${AIBOX_DIR:-./.no-aibox}:/aibox:ro
+    environment:
+      AIBOX_DIR: /aibox
+      KW_YAML: builtin

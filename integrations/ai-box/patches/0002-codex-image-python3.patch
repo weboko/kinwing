@@ -1,0 +1,17 @@
+diff --git a/Dockerfile.codex b/Dockerfile.codex
+index 223ade1..5a29d1c 100644
+--- a/Dockerfile.codex
++++ b/Dockerfile.codex
+@@ -4,9 +4,10 @@ ARG DEBIAN_FRONTEND=noninteractive
+ 
+ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ 
+-# Only what the Codex installer, codex-daemon.sh and basic repo work need.
++# Only what the Codex installer, codex-daemon.sh and basic repo work need (python3: the
++# kinwing knowledge skills run on it).
+ RUN apt-get update && apt-get install -y --no-install-recommends \
+-    ca-certificates curl git openssh-client jq ripgrep procps caddy cron \
++    ca-certificates curl git openssh-client jq ripgrep procps caddy cron python3 \
+     && rm -rf /var/lib/apt/lists/*
+ 
+ # Cloudflare tunnel client, for publishing the box's web server (see box-supervisor.sh).
