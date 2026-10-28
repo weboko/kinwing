@@ -124,9 +124,32 @@ listed.
   letta.com and elicit.com were not. Real-source research in the demo therefore uses
   GitHub-hosted documentation, papers' companion repositories and wikis. The robots.txt
   check and the user-agent are exercised against those hosts.
-- Docker 29 works (daemon started manually). Headless `claude -p` works and reports
-  `total_cost_usd`, which let the demo run one *real* scheduled research cycle through
-  agent-orchestrator. Codex could not be installed (`chatgpt.com` refused), so **Codex
-  compatibility is by construction (same skills, same CLI), not tested live.**
+- Docker 29 works (daemon started manually). A one-turn headless `claude -p --output-format json`
+  call works and reports `total_cost_usd`, which confirmed the usage fields `runs.read_usage`
+  parses (see the next item for why no full headless research run happened). Codex could not
+  be installed (`chatgpt.com` refused), so **Codex compatibility is by construction (same
+  skills, same CLI), not tested live.**
 - Python 3.13 locally, 3.12 in ai-box images. sqlite3 has FTS5, but it isn't used yet
   (ADR-0002).
+- Launching a nested autonomous agent (`claude -p --dangerously-skip-permissions` in the
+  background) was **blocked by the session's safety policy**. A one-turn headless call
+  without tools worked and confirmed that project-level skills (`.claude/skills/*`) are
+  discovered, including kinwing's two. The research runs in the demo were therefore done by
+  Claude Code itself, following the skill. Scheduled runs were exercised end to end with a
+  stand-in agent (`tests/fakes/claude`) that follows the same protocol without an LLM.
+- Docker builds here need `--network host` (the egress proxy listens on localhost and
+  accepts only HTTPS CONNECT). Debian's mirror was unreachable; Ubuntu's was reachable.
+- create-report's `check.mjs` installs Playwright into `~/.cache/create-report/pw`. With
+  `XDG_CACHE_HOME` pointing at a folder whose `node_modules/playwright` links to a preinstalled
+  Playwright, it runs offline. `publish.sh` re-runs the check with `--no-shots`, which deletes
+  earlier screenshots.
+
+## 5. Discoveries from running the system
+
+- GitHub wiki pages rarely start with their own title, and the first `#` heading is often a
+  section ("Symbol"). Titles for wiki pages now come from the page name.
+- The FSRS benchmark README no longer lists SM-2 (removed in commit `3f0b7b7`, 2025-08-22).
+  Git history recovered it. This is a pattern worth keeping in the research protocol: when
+  a comparison disappears from a living document, its history is evidence.
+- Counter-evidence is often a caveat, not a refutation. Automating "contested" from it
+  mislabelled claims (ADR-0007, "Lesson recorded").

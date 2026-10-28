@@ -134,7 +134,8 @@ def build(kb: KB, topic: str) -> str:
                 if o in idx:
                     out.append(f"  - vs {_l('claim', o)}: {idx[o]['text']}")
             if c.get("counter"):
-                out.append(f"  - counter-evidence: {', '.join(c['counter'])}")
+                out.append(f"  - counter-evidence or caveat ({c.get('strength')}): "
+                           + "; ".join(ev_ref(e) for e in c["counter"]))
     else:
         out.append("_No conflicts recorded._")
     out += ["", "## 6. Important uncertainties", ""]

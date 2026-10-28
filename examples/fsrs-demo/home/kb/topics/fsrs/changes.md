@@ -2,6 +2,7 @@
 
 > Generated from `changes.jsonl` (append-only). Newest first.
 
+- **2026-10-28T02:25:55.184Z** · topic `fsrs` · recurring research scheduled: 0 9 * * 1,3,5
 - **2026-10-28T02:25:54.778Z** · run `run-20261028-n8bq` · research run completed: 0 sources, 0 evidence, 0 new / 0 revised claims; stop: demo: recovery check · run `run-20261028-n8bq`
   - closing the recovery check run
 - **2026-10-28T02:25:54.669Z** · question `q-20261028-yuy5` · question open: What are the known limitations or failure modes of FSRS and of its evaluation? — not finished in this run · run `run-20261028-n8bq`
